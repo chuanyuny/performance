@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+    <!-- 引入element样式 -->
+    <link rel="stylesheet" href="element-ui/lib/theme-default/index.css">
+    <link rel="stylesheet" href="./css/index.css">
+	<title>网站性能测试界面</title>
+</head>
+<body>
+	<nav>
+		<h2>网站性能测试</h2>
+	</nav>
+	<div id="myViewBody">
+	<el-tabs v-model="activeName"  type="card" @tab-click="handleClick">
+			<el-tab-pane label="启动性能测试" name="first">启动性能测试</el-tab-pane>
+			<el-tab-pane label="启动临时测试" name="second">启动临时测试</el-tab-pane>
+	</el-tabs>
+	<br>
+	<div id="firstContent">
+		<el-form :model="ruleForm" ref="ruleForm" label-width="140px" class="demo-ruleForm">
+			<el-form-item label="人数" prop="number" :rules="[{ required: true, message: '请输入请求人数', trigger: 'blur' },{ min:1,max:7 ,message: '请输入1-1000000的数字', trigger: 'blur' }]">
+			  	<el-col :span="16">
+			    	<el-input v-model="ruleForm.number" placeholder='请输入请求人数' type='number' onKeyPress="if ( (event.keyCode<48 || event.keyCode>57)) event.returnValue=false"></el-input>
+				</el-col>
+			</el-form-item>
+			<el-form-item label="网址" prop="url" :rules="[{ required: true, message: '请填写网址', trigger: 'blur' },{type:'url',message:'请填写正确的网址',trigger: 'blur,change'}]">
+			  	<el-col :span="16">
+			    	<el-input v-model="ruleForm.url" placeholder='请输入网址'></el-input>
+			    </el-col>
+			</el-form-item>
+			<div class="demo1">
+				<h4>各省网站访问权重</h4><br>
+				<el-form-item v-for="(domain, index) in ruleForm.tableData" :label="domain.name" :key="domain.name" :prop="'tableData.' + index + '.level'" label-width='140px' :rules="[{validator:checkAge,trigger:'change'}]">
+					<el-col :span="20">
+						<el-input v-model="domain.level"  onKeyPress="if (event.keyCode!=46 && (event.keyCode<48 || event.keyCode>57)) event.returnValue=false"></el-input>
+					</el-col>
+				  </el-form-item>
+			</div>
+			<div class="demo2">
+			  	<h4>各时间段网站访问权重</h4><br>
+			  	<el-form-item v-for="(domain, index) in ruleForm.timeData" :label="domain.name" :key="domain.name" :prop="'timeData.' + index + '.time'" label-width='140px' :rules="[{validator:checkAge,trigger:'change'}]">
+			  		<el-col :span="20">
+						<el-input v-model="domain.time" onKeyPress="if (event.keyCode!=46 && (event.keyCode<48 || event.keyCode>57)) event.returnValue=false"></el-input>
+					</el-col>
+			  </el-form-item>
+			</div>
+			<div class='suggestion'>
+				<el-form-item>
+					<el-button class='switchBtn' type="primary" @click="submitForm('ruleForm')">开始请求</el-button>
+					<el-button @click="resetForm('ruleForm')">重置</el-button>
+				</el-form-item>
+			</div>
+		</el-form>
+	</div>
+	<div id="secContent">
+		<el-form :model="ruleForm2" ref="ruleForm2" label-width="140px" class="demo-ruleForm">
+			<el-form-item label="发送次数" prop="number" :rules="[{ required: true, message: '请输入发送次数', trigger: 'blur' },{ min:1,max:2 ,message: '请输入1-100的数字', trigger: 'blur' }]">
+			  	<el-col :span="16">
+			    	<el-input v-model="ruleForm2.number" placeholder='请输入发送次数' type='number' onKeyPress="if ( (event.keyCode<48 || event.keyCode>57)) event.returnValue=false"></el-input>
+				</el-col>
+			</el-form-item>
+			<el-form-item label="请求网址" prop="url" :rules="[{ required: true, message: '请填写网址', trigger: 'blur' },{type:'url',message:'请填写正确的网址',trigger: 'blur,change'}]">
+			  	<el-col :span="16">
+			    	<el-input v-model="ruleForm2.url" placeholder='请输入网址'></el-input>
+			    </el-col>
+			</el-form-item>
+			<el-form-item label="请求省份" prop="region" class="pro"><!-- :rules="[{validator:checkPro,trigger:'blur'}]" -->
+				<el-col :span="16">
+				    <el-select v-model="ruleForm2.region"   placeholder="请求省份">
+				      <el-option v-for="option in ruleForm2.optionCity" v-bind:value="option.value">
+					    {{ option.city }}
+					  </el-option>
+				    </el-select>
+				</el-col>
+		    </el-form-item>
+		    <el-form-item label="请求设备" prop="equip" class="device"><!-- :rules="[{validator:checkDev,trigger:'blur'}]" -->
+		    	<el-col :span="16">
+				    <el-select v-model="ruleForm2.equip"  placeholder="请求设备" >
+				     <el-option v-for="option in ruleForm2.optionEquip" v-bind:value="option.value">
+					    {{ option.name }}
+					  </el-option>
+				    </el-select>
+				</el-col>
+		    </el-form-item>
+			<div class='suggestion'>
+				<el-form-item>
+					<el-button class='switchBtn2' type="primary" @click="submitForm2('ruleForm2')">开始请求</el-button>
+					<el-button @click="resetForm('ruleForm2')">重置</el-button>
+				</el-form-item>
+			</div>
+		</el-form>
+	</div>
+
+
+	</div>
+<!-- 引入element JS -->
+<script src="./js/vue.min.js"></script>
+<script src="element-ui/lib/index.js"></script>
+<script src="./js/jquery.js"></script>
+<script>
+	var myView = new Vue({
+		el: '#myViewBody',
+		data(){
+			return {
+				activeName: 'first',
+				ruleForm:{
+			        number: '',
+			        url: 'http://10.1.4.5',
+			        tableData: [{name:'北京',level:'3.75'},
+								{name:'上海',level:'2.77'},
+								{name:'天津',level:'1.17'},
+								{name:'重庆',level:'1.76'},
+								{name:'黑龙江',level:'2.31'},
+								{name:'吉林',level:'1.98'},
+								{name:'辽宁',level:'3.29'},
+								{name:'江苏',level:'7.34'},
+								{name:'山东',level:'7.12'},
+								{name:'安徽',level:'3.59'},
+								{name:'河北',level:'5.41'},
+								{name:'河南',level:'6.7'},
+								{name:'湖北',level:'3.69'},
+								{name:'湖南',level:'3.6'},
+								{name:'江西',level:'2.71'},
+								{name:'陕西',level:'2.44'},
+								{name:'山西',level:'2.58'},
+								{name:'四川',level:'4.88'},
+								{name:'青海',level:'0.28'},
+								{name:'海南',level:'0.61'},
+								{name:'广东',level:'11.55'},
+								{name:'贵州',level:'1.59'},
+								{name:'浙江',level:'5.8'},
+								{name:'福建',level:'3.26'},
+								{name:'台湾',level:'0.55'},
+								{name:'甘肃',level:'1.16'},
+								{name:'云南',level:'1.88'},
+								{name:'内蒙古',level:'1.55'},
+								{name:'宁夏',level:'0.43'},
+								{name:'新疆',level:'1.03'},
+								{name:'西藏',level:'0.08'},
+								{name:'广西',level:'2.85'},
+								{name:'香港',level:'0.27'},
+								{name:'澳门',level:'0.03'}
+								],
+					timeData:  [{name:'00:00-00:59',time:'3.56'},
+								{name:'01:00-01:59',time:'2.33'},
+								{name:'02:00-02:59',time:'1.59'},
+								{name:'03:00-03:59',time:'1.19'},
+								{name:'04:00-04:59',time:'1.02'},
+								{name:'05:00-05:59',time:'1.09'},
+								{name:'06:00-06:59',time:'1.6'},
+								{name:'07:00-07:59',time:'2.46'},
+								{name:'08:00-08:59',time:'3.65'},
+								{name:'09:00-09:59',time:'4.59'},
+								{name:'10:00-10:59',time:'5.07'},
+								{name:'11:00-11:59',time:'5.08'},
+								{name:'12:00-12:59',time:'5.1'},
+								{name:'13:00-13:59',time:'5.28'},
+								{name:'14:00-14:59',time:'5.35'},
+								{name:'15:00-15:59',time:'5.42'},
+								{name:'16:00-16:59',time:'5.45'},
+								{name:'17:00-17:59',time:'5.25'},
+								{name:'18:00-18:59',time:'5.22'},
+								{name:'19:00-19:59',time:'5.88'},
+								{name:'20:00-20:59',time:'6.36'},
+								{name:'21:00-21:59',time:'6.5'},
+								{name:'22:00-22:59',time:'6.04'},
+								{name:'23:00-23:59',time:'4.92'}
+								]
+		        },
+		        ruleForm2:{
+			        number: '',
+			        url: 'http://10.1.4.5',
+			        region:'北京',
+			        equip:'Mac',
+			        optionCity:[{city:'北京',value:'北京'},
+								{city:'上海',value:'上海'},
+								{city:'天津',value:'天津'},
+								{city:'重庆',value:'重庆'},
+								{city:'黑龙江',value:'黑龙江'},
+								{city:'吉林',value:'吉林'},
+								{city:'辽宁',value:'辽宁'},
+								{city:'江苏',value:'江苏'},
+								{city:'山东',value:'山东'},
+								{city:'安徽',value:'安徽'},
+								{city:'河北',value:'河北'},
+								{city:'河南',value:'河南'},
+								{city:'湖北',value:'湖北'},
+								{city:'湖南',value:'湖南'},
+								{city:'江西',value:'江西'},
+								{city:'陕西',value:'陕西'},
+								{city:'山西',value:'山西'},
+								{city:'四川',value:'四川'},
+								{city:'青海',value:'青海'},
+								{city:'海南',value:'海南'},
+								{city:'广东',value:'广东'},
+								{city:'贵州',value:'贵州'},
+								{city:'浙江',value:'浙江'},
+								{city:'福建',value:'福建'},
+								{city:'台湾',value:'台湾'},
+								{city:'甘肃',value:'甘肃'},
+								{city:'云南',value:'云南'},
+								{city:'内蒙古',value:'内蒙古'},
+								{city:'宁夏',value:'宁夏'},
+								{city:'新疆',value:'新疆'},
+								{city:'西藏',value:'西藏'},
+								{city:'广西',value:'广西'},
+								{city:'香港',value:'香港'},
+								{city:'澳门',value:'澳门'}
+								],
+					optionEquip:[{name:'Mac',value:'Mac'},
+								{name:'Windows',value:'Windows'},
+								{name:'IOS',value:'IOS'},
+								{name:'Android',value:'Android'},
+								{name:'WP',value:'WP'}
+								]
+		        }
+			}
+		},
+		created(){
+			this.check()
+		},
+		methods:{
+			handleClick(tab) {
+		        // console.log(tab.index);
+		        if(tab.index==0){
+		        	$('#firstContent').show();
+		        	this.check();
+		        	$('#secContent').hide();
+		        }else{
+		        	$('#secContent').show();
+		        	$('#firstContent').hide();
+		        }
+		    },
+			check(){
+				var _that=this;
+				$.get('http://tools.princetechs.com/api/web_performance/web_performance_status/',{},function(data){
+						if(data.is_ok){
+			          	 	_that.$message({
+					            type: 'success',
+					            message: data.msg,
+					            showClose: true
+					         });
+			          	 	$('.switchBtn').text('开始请求').removeClass('el-button--danger').addClass('el-button--primary');
+			          	}else{
+			          	 	_that.$message({
+					            type: 'warning',
+					            message: data.msg,
+					            showClose: true
+					          });
+			          	 	$('.switchBtn').text('中断请求').removeClass('el-button--primary').addClass('el-button--danger');
+			          	}
+			        })
+			},
+			checkAge:function(rule, value, callback){
+				if (isNaN(value)){
+					callback(new Error('请输入0-100的数字'));
+				}else if(value ==''){
+					callback()
+				}else{
+				  var reg=/^(((\d|[1-9]\d)(\.\d{1,2})?)|100|100.0|100.00)$/
+			      if(!reg.test(value)){
+			      callback(new Error('请输入0-100的数字,小数点后最多支持两位'));
+			      }else{
+			      	callback()
+			      }
+				}
+		    },
+		  //   checkPro:function(rule, value, callback){
+				// if ($('.pro .el-tag').length==0){
+				// 	callback(new Error('请求省份不能为空'));
+				// }else{
+				// 	callback()
+				// }
+		  //   },
+		  //   checkDev:function(rule, value, callback){
+				// if ($('.device .el-tag').length==0){
+				// 	callback(new Error('请求设备不能为空'));
+				// }else{
+				// 	callback()
+				// }
+		  //   },
+			submitForm(formName){
+				var _this=this;
+				var name=$('.switchBtn').text();
+				if(name=='开始请求'){
+					this.$refs[formName].validate(function(valid){
+			          if (valid) {
+			          	var number=_this.$data.ruleForm.number;
+			          	var url=_this.$data.ruleForm.url;
+			          	var tableData=JSON.stringify(_this.$data.ruleForm.tableData);
+			          	var timeData=JSON.stringify(_this.$data.ruleForm.timeData);
+			          	 $('.switchBtn').text('中断请求').removeClass('el-button--primary').addClass('el-button--danger');
+			          	 $.ajax({
+				            url : "http://tools.princetechs.com/api/web_performance/web_performance_start/",
+				            type : "POST",
+					        data : {'number':number,'url':url,'tableData':tableData,'timeData':timeData},
+					        dataType: 'json',
+				           success:function(data) {
+					           	if(data.is_ok){
+				          	 		_this.$message({
+							            type: 'success',
+							            message: data.msg,
+							            showClose: true
+						          });
+				          	 	}else{
+				          	 		_this.$message({
+							            type: 'warning',
+							            message: data.msg,
+							            showClose: true
+						          });
+				          	 	}
+				           },
+				           error:function(data){
+				           	 _this.$message({
+					            type: 'warning',
+					            message: '连接失败',
+					            showClose: true
+				          	});
+				           }
+				         })
+			          } else {
+			            $('.switchBtn').text('开始请求').removeClass('el-button--danger').addClass('el-button--primary');
+			            return false;
+			          }
+		        	});
+				}else{
+					$('.switchBtn').text('开始请求').removeClass('el-button--danger').addClass('el-button--primary');
+					$.get('http://tools.princetechs.com/api/web_performance/web_performance_stop/',{},function(data){
+						if(data.is_ok){
+			          	 	_this.$message({
+					            type: 'success',
+					            message: data.msg,
+					            showClose: true
+					         });
+			          	}else{
+			          	 	_this.$message({
+					            type: 'warning',
+					            message: data.msg,
+					            showClose: true
+					          });
+			          	}
+			        })
+				}
+
+		    },
+		    submitForm2(formName){
+				var _this=this;
+				this.$refs[formName].validate(function(valid){
+			        if (valid) {
+			          	var number=_this.$data.ruleForm2.number;
+			          	var url=_this.$data.ruleForm2.url;
+			          	var regionList=[];
+			          	regionList.push(_this.$data.ruleForm2.region);
+			          	var region=JSON.stringify(regionList);
+			          	var equipList=[];
+			          	equipList.push(_this.$data.ruleForm2.equip);
+			          	var equip=JSON.stringify(equipList);
+			          	$.ajax({
+				            url : "http://tools.princetechs.com/api/web_performance/suddenly_request_start/",
+				            type : "POST",
+					        data : {'lnumber':number,'url':url,'lprovince':region,'ldevice':equip},
+					        dataType: 'json',
+				            success:function(data) {
+					           	if(data.is_ok){
+				          	 		_this.$message({
+							            type: 'success',
+							            message: data.msg,
+							            showClose: true
+						          });
+				          	 	}else{
+				          	 		_this.$message({
+							            type: 'warning',
+							            message: data.msg,
+							            showClose: true
+						          });
+				          	 	}
+				           },
+				            error:function(data){
+				           	 _this.$message({
+					            type: 'warning',
+					            message: '连接失败',
+					            showClose: true
+				          	});
+				           }
+				        });
+			        } else {
+			            return false;
+			        }
+		        });
+		    },
+		    resetForm(formName){
+		    	var _self=this;
+		    	_self.$confirm('确定重置所有项?', '提示', {
+			          confirmButtonText: '确定',
+			          cancelButtonText: '取消',
+			          type: 'warning'
+			    }).then(function(){
+			          _self.$refs[formName].resetFields();
+			          _self.$message({
+			            type: 'success',
+			            message: '重置成功!',
+			            showClose: true,
+			          });
+			    }).catch(function(){
+			          _self.$message({
+			            type: 'info',
+			            message: '已取消重置',
+			            showClose: true
+			          });
+			    });
+		    }
+		}
+	})
+</script>
+</body>
+</html>
